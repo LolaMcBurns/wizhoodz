@@ -86,7 +86,7 @@
       <input id="handle" placeholder="@yourhandle" disabled>
     </div>
 
-    <button class="btn dark block" id="summonBtn" disabled>Summon Wizard</button>
+    <button class="btn dark block" id="summonBtn" disabled>Get ID</button>
 
     <div id="resultZone" class="hidden">
       <hr>
@@ -107,7 +107,7 @@
       </div>
 
       <p style="text-align:center;margin-top:14px;color:var(--grey);font-size:.9rem;">
-        Don't like it? <button id="rerollBtn" style="background:none;border:none;color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer;font-size:.9rem;">Summon again</button>
+        Don't like it? <button id="rerollBtn" style="background:none;border:none;color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer;font-size:.9rem;">Try again</button>
       </p>
 
       <div style="display:flex;gap:12px;margin-top:22px;">
@@ -132,8 +132,8 @@
 <script>
 /* ============ CONFIG ============ */
 const POST_URL="https://x.com/wizhoodz";
-const SAVE_ENDPOINT="save.php";
-const PFP_PROXY="https://kotopersik77.howto.rocks/pfp.php?h=";   // <-- YOUR working pfp.php URL
+const SAVE_ENDPOINT="/api/save";
+const PFP_PROXY="/api/pfp?h=";
 document.getElementById('followBtn').href=POST_URL;
 
 /* ============ WORD BANKS ============ */
