@@ -65,8 +65,8 @@
 <body>
   <div class="wrap">
     <header><span class="logo-dot"></span><b>Wizhoodz</b></header>
-    <h1>Summon your wizard.</h1>
-    <p class="lead">Three steps. One cursed identity. <b style="color:var(--ink)">Post it on X to enter the WL.</b></p>
+    <h1>WizList Application.</h1>
+    <p class="lead">Three steps. One magic spot. <b style="color:var(--ink)">Post it on X to enter the WL.</b></p>
 
     <div class="step" id="s1">
       <div class="step-num">Step 01</div>
@@ -77,7 +77,7 @@
     <div class="step locked" id="s2">
       <div class="step-num">Step 02</div>
       <h3>Paste your wallet <span class="check hidden" id="c2">&#10003;</span></h3>
-      <input id="wallet" placeholder="0x... or Solana address" disabled>
+      <input id="wallet" placeholder="0x... EVM address" disabled>
     </div>
 
     <div class="step locked" id="s3">
@@ -154,6 +154,7 @@ const NOUN_GROUPS={
   ],
   object:[
     {title:"Sock",bio:"a sock",plural:"socks"},
+    {title:"Neck",bio:"a neck",plural:"necks"},
     {title:"Spoon",bio:"a spoon",plural:"spoons"},
     {title:"Doorknob",bio:"a doorknob",plural:"doorknobs"},
     {title:"Umbrella",bio:"an umbrella",plural:"umbrellas"},
@@ -173,7 +174,7 @@ const NOUN_GROUPS={
     {title:"Possum",bio:"a possum",plural:"possums"}
   ]
 };
-const PLACE=["Ohio","the swamp","aisle 7","the DMV","New Jersey","the misty hills","a Denny's parking lot","the forbidden pantry"];
+const PLACE=["Ohio","the swamp","the pink mountains","the void","the magic castle","the spell casting office","aisle 7","the DMV","New Jersey","the misty hills","a Denny's parking lot","the forbidden pantry"];
 const FEELING=["spite","boredom","pure vibes","mild anxiety","stubbornness","caffeine","raw confusion"];
 const BIOS={
   food:["Cries over their {bare} just to make it saltier.","Retired from evil to open a small {bare} shop in {place}.","Draws unlimited power from {x}. Refuses to explain how.","Their spellbook is just {n} recipes involving {bare}.","Runs {place}'s only tavern that serves nothing but {bare}.","Powered entirely by {feeling} and questionable {bare}.","Undefeated in {n} duels, all won by throwing {plural}."],
@@ -183,7 +184,7 @@ const BIOS={
 const CLOSERS=["","", " Twice."," Allegedly."," We don't ask about it."," Nobody knows why."," Honestly, respect."," Peak wizard behavior."," Somehow, it worked."," It was a whole thing."];
 const FIRST=["Randolf","Golinda","Merlixx","Bumblewort","Zaphira","Grumbledor","Morgana","Thaddeus","Elvira","Snargle","Winnifred","Baldric","Cornelius","Blorbo","Throgg"];
 const MUNDANE=["Kevin","Susan","Gary","Brenda","Nigel","Doreen","Steve","Karen","Barry","Dave","Greg"];
-const DOER=["Poker","Whisperer","Botherer","Wrangler","Enjoyer","Menace","Guardian","Hoarder","Summoner","Napper","Respecter","Sniffer","Tamer","Muncher"];
+const DOER=["Poker","Whisperer","Botherer","Wrangler","Enjoyer","Menace","Guardian","Hoarder","Summoner","Napper","Respecter","Sniffer","Tamer","Muncher","Cracker","Hugger"];
 
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const rnd=n=>Math.floor(Math.random()*n)+1;
