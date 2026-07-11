@@ -220,9 +220,11 @@ let followed=false;
 
 document.getElementById('followBtn').addEventListener('click',()=>{
   followed=true;
-  document.getElementById('c1').classList.remove('hidden');
-  s2.classList.remove('locked'); wallet.disabled=false;
-  setTimeout(()=>wallet.focus(),400);
+  setTimeout(()=>{
+    document.getElementById('c1').classList.remove('hidden');
+    s2.classList.remove('locked'); wallet.disabled=false;
+    wallet.focus();
+  },2500);
 });
 
 wallet.addEventListener('input',gate);
