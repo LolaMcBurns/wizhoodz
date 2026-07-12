@@ -390,20 +390,23 @@ document.getElementById('modalCloseBtn').addEventListener('click',()=>{
   modalOverlay.classList.add('hidden');
   resetPage();
 });
-
 /* ============ POST ON X ============ */
 shareBtn.addEventListener('click',async ()=>{
   if(!current) return;
   const tweetText="Got my ID @wizhoodz \ud83e\udeaa\ud83d\udd2e";
   const tweetUrl="https://x.com/intent/tweet?text="+encodeURIComponent(tweetText);
 
-  if(hasPosted){ window.open(tweetUrl,"_blank","noopener"); return; }
+  // Open X immediately, straight to the tweet URL (no blank tab, no delay).
+  // This must happen synchronously on click so the browser doesn't block it.
+  window.open(tweetUrl,"_blank","noopener");
 
-  const xTab=window.open("about:blank","_blank");
+  if(hasPosted){ return; }
+
   shareBtn.disabled=true;
   const oldText=shareBtn.textContent;
-  shareBtn.textContent="Checking...";
+  shareBtn.textContent="Saving...";
 
+  // Save in the background; the popup shows when they return to this tab.
   const result=await saveEntry({
     wallet: current.wallet,
     handle: current.handle,
@@ -413,13 +416,10 @@ shareBtn.addEventListener('click',async ()=>{
 
   if(result.ok){
     hasPosted=true;
-    if(xTab) xTab.location.href=tweetUrl;
-    else window.location.href=tweetUrl;
     showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
   }else{
     shareBtn.disabled=false;
     shareBtn.textContent=oldText;
-    if(xTab) xTab.close();
     showModal(false,(result.error||"Something went wrong."),"\u26D4");
   }
 });
