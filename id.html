@@ -414,9 +414,13 @@ shareBtn.addEventListener('click',async ()=>{
     id: current.id
   });
 
-  if(result.ok){
+    if(result.ok){
     hasPosted=true;
     showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
+  }else if(result.error && /already/i.test(result.error)){
+    // Duplicate = still a success-style popup, just says "already"
+    hasPosted=true;
+    showModal(true,"You're already on the WizList \ud83e\uddd9","\ud83e\uddd9");
   }else{
     shareBtn.disabled=false;
     shareBtn.textContent=oldText;
