@@ -131,10 +131,11 @@
 
 <script>
 /* ============ CONFIG ============ */
-const FOLLOW_URL="https://x.com/intent/follow?screen_name=wizhoodz";
+const POST_URL="https://x.com/intent/follow?screen_name=wizhoodz";
 const SAVE_ENDPOINT="https://wl.wizhoodz.workers.dev/api/save";
+const CHECK_ENDPOINT="https://wl.wizhoodz.workers.dev/api/check";
 const PFP_PROXY="https://wl.wizhoodz.workers.dev/api/pfp?h=";
-document.getElementById('followBtn').href=FOLLOW_URL;
+document.getElementById('followBtn').href=POST_URL;
 
 /* ============ WORD BANKS ============ */
 /* countable nouns get a plural; uncountables (cheese/soup/gravy/toast) set plural=null */
@@ -192,6 +193,7 @@ const rnd=n=>Math.floor(Math.random()*n)+1;
 function summonWizard(){
   const cat=pick(Object.keys(NOUN_GROUPS)), noun=pick(NOUN_GROUPS[cat]);
   const bare=noun.bio.replace(/^(a |an |the )/,"");
+  // uncountable nouns have no plural -> fall back to the bare (singular, uncountable) form
   const plural=noun.plural || bare;
   const first=(Math.random()<0.35)?pick(MUNDANE):pick(FIRST);
   const name=first+" The "+noun.title+" "+pick(DOER);
@@ -228,34 +230,57 @@ document.getElementById('followBtn').addEventListener('click',()=>{
 
 wallet.addEventListener('input',gate);
 handle.addEventListener('input',gate);
+// live duplicate check fires when they leave/finish the field
+wallet.addEventListener('change',checkWalletDup);
+handle.addEventListener('change',checkHandleDup);
+wallet.addEventListener('blur',checkWalletDup);
+handle.addEventListener('blur',checkHandleDup);
+
 function walletValid(v){v=v.trim();return /^0x[a-fA-F0-9]{6,}$/.test(v)||/^[1-9A-HJ-NP-Za-km-z]{25,}$/.test(v);}
 function handleValid(v){return v.trim().replace(/^@/,'').length>=2;}
+
+let walletDupOk=true, handleDupOk=true; // false when the value is already on the list
+
 function gate(){
   const wOk=walletValid(wallet.value), hOk=handleValid(handle.value);
   document.getElementById('c2').classList.toggle('hidden',!wOk);
   if(wOk&&s3.classList.contains('locked')){s3.classList.remove('locked');handle.disabled=false;}
   document.getElementById('c3').classList.toggle('hidden',!hOk);
-  summonBtn.disabled=!(followed&&wOk&&hOk);
+  summonBtn.disabled=!(followed&&wOk&&hOk&&walletDupOk&&handleDupOk);
+}
+
+async function isDuplicate(type,value){
+  try{
+    const r=await fetch(CHECK_ENDPOINT+"?type="+type+"&value="+encodeURIComponent(value));
+    const d=await r.json();
+    return d.exists===true;
+  }catch(e){ return false; } // don't block on network error
+}
+
+async function checkWalletDup(){
+  const v=wallet.value.trim();
+  if(!walletValid(v)){ walletDupOk=true; gate(); return; }
+  const dup=await isDuplicate("wallet",v);
+  walletDupOk=!dup;
+  gate();
+  if(dup) showModal(false,"This address is already on the WizList","\u26D4",false);
+}
+
+async function checkHandleDup(){
+  const v=handle.value.trim();
+  if(!handleValid(v)){ handleDupOk=true; gate(); return; }
+  const dup=await isDuplicate("handle",v);
+  handleDupOk=!dup;
+  gate();
+  if(dup) showModal(false,"This X handle is already on the WizList","\u26D4",false);
 }
 
 /* ============ SAVE ENTRY TO SERVER ============ */
 async function saveEntry(entry){
   try{
-    const res=await fetch(SAVE_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(entry)
-    });
-    const raw=await res.text();
-    // show what actually came back
-    let data;
-    try{ data=JSON.parse(raw); }
-    catch(e){ return {ok:false,error:"Non-JSON ["+res.status+"]: "+raw.slice(0,120)}; }
-    if(!res.ok) return {ok:false,error:"HTTP "+res.status+": "+raw.slice(0,120)};
-    return data;
-  }catch(e){
-    return {ok:false,error:"FETCH FAILED: "+e.message};
-  }
+    const res=await fetch(SAVE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
+    return await res.json();
+  }catch(e){return {ok:false,error:"Could not reach server. Try again."};}
 }
 
 /* ============ PFP HELPERS ============ */
@@ -286,7 +311,6 @@ async function fetchPfpDataURL(clean){
 /* ============ SUMMON ============ */
 let current=null;
 let hasPosted=false;
-let pendingTweetUrl=null;
 const shareBtn=document.getElementById('shareBtn');
 
 async function doSummon(){
@@ -313,7 +337,6 @@ async function doSummon(){
   current={...w,handle:clean,id,vals,wallet:wallet.value.trim(),pfp:null};
 
   hasPosted=false;
-  pendingTweetUrl=null;
   shareBtn.disabled=false;
   shareBtn.textContent="Post on X to Enter";
 
@@ -372,9 +395,10 @@ const modalOverlay=document.getElementById('modalOverlay');
 const modalBox=document.getElementById('modalBox');
 const modalEmoji=document.getElementById('modalEmoji');
 const modalMsg=document.getElementById('modalMsg');
-const modalCloseBtn=document.getElementById('modalCloseBtn');
+let resetOnClose=true;
 
-function showModal(ok,msg,emoji){
+function showModal(ok,msg,emoji,doReset){
+  resetOnClose = (doReset!==false); // default true unless explicitly false
   modalBox.classList.remove('ok','err');
   modalBox.classList.add(ok?'ok':'err');
   modalEmoji.textContent=emoji;
@@ -383,10 +407,11 @@ function showModal(ok,msg,emoji){
 }
 
 function resetPage(){
+  // wipe inputs + state
   followed=false;
   hasPosted=false;
-  pendingTweetUrl=null;
   current=null;
+  walletDupOk=true; handleDupOk=true;
   wallet.value=""; handle.value="";
   wallet.disabled=true; handle.disabled=true;
   s2.classList.add('locked'); s3.classList.add('locked');
@@ -396,31 +421,25 @@ function resetPage(){
   summonBtn.disabled=true;
   shareBtn.disabled=false;
   shareBtn.textContent="Post on X to Enter";
-  modalCloseBtn.textContent="Close";
   document.getElementById('resultZone').classList.add('hidden');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-modalCloseBtn.addEventListener('click',()=>{
+document.getElementById('modalCloseBtn').addEventListener('click',()=>{
   modalOverlay.classList.add('hidden');
-  // If a tweet is pending, open X on THIS tap (Safari-safe), then reset
-  if(pendingTweetUrl){
-    const url=pendingTweetUrl;
-    pendingTweetUrl=null;
-    window.open(url,"_blank","noopener");
-  }
-  resetPage();
+  if(resetOnClose) resetPage();
+  resetOnClose=true; // default back for next time
 });
 
 /* ============ POST ON X ============ */
 shareBtn.addEventListener('click',async ()=>{
   if(!current) return;
-  const tweetText="Got my ID @wizhoodz \ud83e\udeaa\ud83e\uddea";
+  const tweetText="Got my ID @wizhoodz \ud83e\udeaa\ud83d\udd2e";
   const tweetUrl="https://x.com/intent/tweet?text="+encodeURIComponent(tweetText);
 
-  // Already posted once -> just reopen the tweet composer
   if(hasPosted){ window.open(tweetUrl,"_blank","noopener"); return; }
 
+  const xTab=window.open("about:blank","_blank");
   shareBtn.disabled=true;
   const oldText=shareBtn.textContent;
   shareBtn.textContent="Checking...";
@@ -434,12 +453,13 @@ shareBtn.addEventListener('click',async ()=>{
 
   if(result.ok){
     hasPosted=true;
-    pendingTweetUrl=tweetUrl;              // stash tweet url
-    modalCloseBtn.textContent="Post on X \u2192"; // button becomes the post action
-    showModal(true,"You're on the WizList! Tap below to post \ud83c\udf89","\ud83e\uddd9");
+    if(xTab) xTab.location.href=tweetUrl;
+    else window.location.href=tweetUrl;
+    showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
   }else{
     shareBtn.disabled=false;
     shareBtn.textContent=oldText;
+    if(xTab) xTab.close();
     showModal(false,(result.error||"Something went wrong."),"\u26D4");
   }
 });
