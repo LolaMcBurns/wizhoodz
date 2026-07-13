@@ -260,7 +260,7 @@ async function doSummon(){
   document.getElementById('wname').textContent=w.name;
   document.getElementById('whandle').textContent="@"+clean;
   document.getElementById('wbio').textContent='"'+w.bio+'"';
-  document.getElementById('idline').textContent=id+"  \u00b7  WIZHOODZ.XYZ";
+  document.getElementById('idline').textContent=id+"  \u00b7  WIZHOODZ";
 
   const box=document.getElementById('scores');
   box.innerHTML=vals.map(v=>
@@ -308,7 +308,7 @@ async function drawCard(cb){
 
   const canvas=await html2canvas(frame,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false});
   document.body.removeChild(frame);
-  canvas.toBlob(b=>cb(canvas,b),"image/png");
+  canvas.toBlob(b=>cb(canvas,b),"image/jpeg");
 }
 
 /* ============ SAVE ID (download) ============ */
@@ -317,7 +317,7 @@ document.getElementById('saveBtn').addEventListener('click',async ()=>{
     if(blob){
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
-      a.href=url;a.download="wizhood-id-"+current.handle+".png";
+      a.href=url;a.download="wizhood-id-"+current.handle+".jpeg";
       document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(url),2000);
     }
