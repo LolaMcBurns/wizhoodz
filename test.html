@@ -94,7 +94,7 @@
       <div class="cardwrap">
         <div class="card" id="card">
           <div class="card-top">
-            <img class="pfp" id="pfp" alt="" crossorigin="anonymous">
+            <img class="pfp" id="pfp" alt="">
             <div>
               <div class="card-name" id="wname"></div>
               <div class="card-handle" id="whandle"></div>
@@ -223,7 +223,7 @@ document.getElementById('followBtn').addEventListener('click',()=>{
     document.getElementById('c1').classList.remove('hidden');
     s2.classList.remove('locked'); wallet.disabled=false;
     wallet.focus();
-  },25000);
+  },5000);
 });
 
 wallet.addEventListener('input',gate);
