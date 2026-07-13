@@ -94,7 +94,7 @@
       <div class="cardwrap">
         <div class="card" id="card">
           <div class="card-top">
-            <img class="pfp" id="pfp" alt="">
+            <img class="pfp" id="pfp" alt="" crossorigin="anonymous">
             <div>
               <div class="card-name" id="wname"></div>
               <div class="card-handle" id="whandle"></div>
@@ -133,8 +133,7 @@
 /* ============ CONFIG ============ */
 const POST_URL="https://x.com/intent/follow?screen_name=wizhoodz";
 const SAVE_ENDPOINT="https://wl.wizhoodz.workers.dev/api/save";
-const CHECK_ENDPOINT="https://wl.wizhoodz.workers.dev/api/check";
-const PFP_PROXY="https://wl.wizhoodz.workers.dev/api/pfp?h=";
+const WIZARD_IMG="PASTE_YOUR_IMAGE_URL_HERE"; /* <-- your convertible wizard image URL (or a data:image/... base64 string) */
 document.getElementById('followBtn').href=POST_URL;
 
 /* ============ WORD BANKS ============ */
@@ -193,7 +192,6 @@ const rnd=n=>Math.floor(Math.random()*n)+1;
 function summonWizard(){
   const cat=pick(Object.keys(NOUN_GROUPS)), noun=pick(NOUN_GROUPS[cat]);
   const bare=noun.bio.replace(/^(a |an |the )/,"");
-  // uncountable nouns have no plural -> fall back to the bare (singular, uncountable) form
   const plural=noun.plural || bare;
   const first=(Math.random()<0.35)?pick(MUNDANE):pick(FIRST);
   const name=first+" The "+noun.title+" "+pick(DOER);
@@ -230,49 +228,14 @@ document.getElementById('followBtn').addEventListener('click',()=>{
 
 wallet.addEventListener('input',gate);
 handle.addEventListener('input',gate);
-// live duplicate check fires when they leave/finish the field
-wallet.addEventListener('change',checkWalletDup);
-handle.addEventListener('change',checkHandleDup);
-wallet.addEventListener('blur',checkWalletDup);
-handle.addEventListener('blur',checkHandleDup);
-
 function walletValid(v){v=v.trim();return /^0x[a-fA-F0-9]{6,}$/.test(v)||/^[1-9A-HJ-NP-Za-km-z]{25,}$/.test(v);}
 function handleValid(v){return v.trim().replace(/^@/,'').length>=2;}
-
-let walletDupOk=true, handleDupOk=true; // false when the value is already on the list
-
 function gate(){
   const wOk=walletValid(wallet.value), hOk=handleValid(handle.value);
   document.getElementById('c2').classList.toggle('hidden',!wOk);
   if(wOk&&s3.classList.contains('locked')){s3.classList.remove('locked');handle.disabled=false;}
   document.getElementById('c3').classList.toggle('hidden',!hOk);
-  summonBtn.disabled=!(followed&&wOk&&hOk&&walletDupOk&&handleDupOk);
-}
-
-async function isDuplicate(type,value){
-  try{
-    const r=await fetch(CHECK_ENDPOINT+"?type="+type+"&value="+encodeURIComponent(value));
-    const d=await r.json();
-    return d.exists===true;
-  }catch(e){ return false; } // don't block on network error
-}
-
-async function checkWalletDup(){
-  const v=wallet.value.trim();
-  if(!walletValid(v)){ walletDupOk=true; gate(); return; }
-  const dup=await isDuplicate("wallet",v);
-  walletDupOk=!dup;
-  gate();
-  if(dup) showModal(false,"This address is already on the WizList","\u26D4",false);
-}
-
-async function checkHandleDup(){
-  const v=handle.value.trim();
-  if(!handleValid(v)){ handleDupOk=true; gate(); return; }
-  const dup=await isDuplicate("handle",v);
-  handleDupOk=!dup;
-  gate();
-  if(dup) showModal(false,"This X handle is already on the WizList","\u26D4",false);
+  summonBtn.disabled=!(followed&&wOk&&hOk);
 }
 
 /* ============ SAVE ENTRY TO SERVER ============ */
@@ -281,31 +244,6 @@ async function saveEntry(entry){
     const res=await fetch(SAVE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
     return await res.json();
   }catch(e){return {ok:false,error:"Could not reach server. Try again."};}
-}
-
-/* ============ PFP HELPERS ============ */
-function letterAvatar(letter){
-  return "data:image/svg+xml,"+encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192">'+
-    '<rect width="192" height="192" rx="40" fill="#c9f31d"/>'+
-    '<text x="96" y="132" font-family="Helvetica,Arial" font-size="104" font-weight="800" text-anchor="middle" fill="#0a0a0a">'+letter+'</text></svg>'
-  );
-}
-function blobToDataURL(blob){
-  return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob);});
-}
-async function fetchPfpDataURL(clean){
-  try{
-    const res=await fetch(PFP_PROXY+encodeURIComponent(clean));
-    if(res.ok){
-      const blob=await res.blob();
-      if(blob && blob.size>0){
-        const d=await blobToDataURL(blob);
-        if(d && d.indexOf('data:image')===0) return d;
-      }
-    }
-  }catch(e){}
-  return null;
 }
 
 /* ============ SUMMON ============ */
@@ -334,18 +272,14 @@ async function doSummon(){
   setTimeout(()=>fills.forEach((el,i)=>el.style.width=vals[i].v+'%'),60);
 
   document.getElementById('resultZone').classList.remove('hidden');
-  current={...w,handle:clean,id,vals,wallet:wallet.value.trim(),pfp:null};
+  current={...w,handle:clean,id,vals,wallet:wallet.value.trim(),pfp:WIZARD_IMG};
 
   hasPosted=false;
   shareBtn.disabled=false;
   shareBtn.textContent="Post on X to Enter";
 
   const pfp=document.getElementById('pfp');
-  pfp.src=letterAvatar((clean[0]||'?').toUpperCase());
-  const dataUrl=await fetchPfpDataURL(clean);
-  const finalUrl=dataUrl || letterAvatar((clean[0]||'?').toUpperCase());
-  current.pfp=finalUrl;
-  pfp.src=finalUrl;
+  pfp.src=WIZARD_IMG;
 }
 
 summonBtn.addEventListener('click',()=>{
@@ -395,10 +329,8 @@ const modalOverlay=document.getElementById('modalOverlay');
 const modalBox=document.getElementById('modalBox');
 const modalEmoji=document.getElementById('modalEmoji');
 const modalMsg=document.getElementById('modalMsg');
-let resetOnClose=true;
 
-function showModal(ok,msg,emoji,doReset){
-  resetOnClose = (doReset!==false); // default true unless explicitly false
+function showModal(ok,msg,emoji){
   modalBox.classList.remove('ok','err');
   modalBox.classList.add(ok?'ok':'err');
   modalEmoji.textContent=emoji;
@@ -407,11 +339,9 @@ function showModal(ok,msg,emoji,doReset){
 }
 
 function resetPage(){
-  // wipe inputs + state
   followed=false;
   hasPosted=false;
   current=null;
-  walletDupOk=true; handleDupOk=true;
   wallet.value=""; handle.value="";
   wallet.disabled=true; handle.disabled=true;
   s2.classList.add('locked'); s3.classList.add('locked');
@@ -427,8 +357,7 @@ function resetPage(){
 
 document.getElementById('modalCloseBtn').addEventListener('click',()=>{
   modalOverlay.classList.add('hidden');
-  if(resetOnClose) resetPage();
-  resetOnClose=true; // default back for next time
+  resetPage();
 });
 
 /* ============ POST ON X ============ */
@@ -437,12 +366,13 @@ shareBtn.addEventListener('click',async ()=>{
   const tweetText="Got my ID @wizhoodz \ud83e\udeaa\ud83d\udd2e";
   const tweetUrl="https://x.com/intent/tweet?text="+encodeURIComponent(tweetText);
 
-  if(hasPosted){ window.open(tweetUrl,"_blank","noopener"); return; }
+  window.open(tweetUrl,"_blank","noopener");
 
-  const xTab=window.open("about:blank","_blank");
+  if(hasPosted){ return; }
+
   shareBtn.disabled=true;
   const oldText=shareBtn.textContent;
-  shareBtn.textContent="Checking...";
+  shareBtn.textContent="Saving...";
 
   const result=await saveEntry({
     wallet: current.wallet,
@@ -453,14 +383,14 @@ shareBtn.addEventListener('click',async ()=>{
 
   if(result.ok){
     hasPosted=true;
-    if(xTab) xTab.location.href=tweetUrl;
-    else window.location.href=tweetUrl;
     showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
+  }else if(/already/i.test(JSON.stringify(result))){
+    hasPosted=true;
+    showModal(true,"You're already on the WizList \ud83e\uddd9","\ud83e\uddd9");
   }else{
     shareBtn.disabled=false;
     shareBtn.textContent=oldText;
-    if(xTab) xTab.close();
-    showModal(false,(result.error||"Something went wrong."),"\u26D4");
+    showModal(false,(result.error||result.message||"Something went wrong."),"\u26D4");
   }
 });
 </script>
