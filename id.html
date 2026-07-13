@@ -414,17 +414,17 @@ shareBtn.addEventListener('click',async ()=>{
     id: current.id
   });
 
-    if(result.ok){
+      if(result.ok){
     hasPosted=true;
     showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
-  }else if(result.error && /already/i.test(result.error)){
-    // Duplicate = still a success-style popup, just says "already"
+  }else if(/already/i.test(JSON.stringify(result))){
+    // Duplicate = success-style popup, not red
     hasPosted=true;
     showModal(true,"You're already on the WizList \ud83e\uddd9","\ud83e\uddd9");
   }else{
     shareBtn.disabled=false;
     shareBtn.textContent=oldText;
-    showModal(false,(result.error||"Something went wrong."),"\u26D4");
+    showModal(false,(result.error||result.message||"Something went wrong."),"\u26D4");
   }
 });
 </script>
