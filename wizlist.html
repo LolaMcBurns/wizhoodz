@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIZHOODZ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{ --bg:#ffffff; --ink:#0a0a0a; --grey:#6b6b6b; --lime:#c9f31d; --line:#e6e6e6; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:600px;margin:0 auto;padding:32px 24px 80px;}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:48px;}
+  .logo-dot{width:26px;height:26px;border-radius:50%;background:var(--lime);}
+  header b{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;}
+  h1{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px;}
+  .lead{font-size:1.05rem;color:var(--grey);margin-bottom:40px;}
+  .step-num{font-size:.8rem;font-weight:700;color:var(--grey);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .step{margin-bottom:34px;transition:opacity .3s;}
+  .step.locked{opacity:.35;pointer-events:none;}
+  .step h3{font-size:1.15rem;font-weight:700;margin-bottom:12px;}
+  .check{color:#28a745;font-weight:700;}
+  input{width:100%;font-family:inherit;font-size:1.05rem;background:var(--bg);border:none;border-bottom:2px solid var(--line);color:var(--ink);padding:12px 2px;outline:none;transition:border-color .2s;}
+  input::placeholder{color:#b5b5b5;}
+  input:focus{border-bottom-color:var(--ink);}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;border-radius:999px;padding:14px 28px;border:none;transition:.15s;}
+  .btn.lime{background:var(--lime);color:var(--ink);}
+  .btn.lime:hover{filter:brightness(.94);}
+  .btn.dark{background:var(--ink);color:#fff;}
+  .btn.dark:hover{opacity:.85;}
+  .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink);}
+  .btn.ghost:hover{background:var(--ink);color:#fff;}
+  .btn:disabled{opacity:.3;cursor:not-allowed;}
+  .btn.block{width:100%;justify-content:center;}
+  hr{border:none;border-top:1px solid var(--line);margin:44px 0;}
+  .cardwrap{margin-top:8px;}
+  .card{border:2px solid var(--ink);border-radius:22px;padding:34px;background:var(--bg);position:relative;overflow:hidden;}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:var(--lime);}
+  .card-top{display:flex;align-items:center;gap:20px;margin-bottom:22px;}
+  .pfp{width:96px;height:96px;border-radius:20px;object-fit:cover;background:#eee;flex-shrink:0;}
+  .card-name{font-size:1.65rem;font-weight:800;letter-spacing:-.02em;line-height:1.15;}
+  .card-handle{font-size:1rem;color:var(--grey);}
+  .card-bio{font-size:1.15rem;color:#333;font-style:italic;margin-bottom:20px;line-height:1.5;}
+  .score-row{display:flex;align-items:center;gap:12px;margin:9px 0;font-size:.85rem;font-weight:600;}
+  .score-ico{width:20px;height:20px;flex-shrink:0;}
+  .score-label{width:74px;flex-shrink:0;}
+  .bar{flex:1;height:9px;background:#f0f0f0;border-radius:6px;overflow:hidden;}
+  .bar-fill{display:block;height:100%;width:0;background:var(--lime);border-radius:6px;transition:width .7s ease;}
+  .score-val{width:30px;text-align:right;color:var(--ink);font-size:.9rem;}
+  .card-id{margin-top:20px;font-size:.72rem;letter-spacing:.1em;color:var(--grey);font-family:ui-monospace,monospace;}
+  .hidden{display:none;}
+  .note{font-size:.82rem;color:var(--grey);margin-top:10px;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,10,10,.55);display:flex;align-items:center;justify-content:center;padding:24px;z-index:9999;}
+  .modal-overlay.hidden{display:none;}
+  .modal-box{background:#fff;border:2px solid var(--ink);border-radius:22px;max-width:380px;width:100%;padding:34px 30px;text-align:center;position:relative;overflow:hidden;}
+  .modal-box::before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:var(--lime);}
+  .modal-emoji{font-size:2.6rem;margin-bottom:12px;line-height:1;}
+  .modal-msg{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;margin-bottom:24px;line-height:1.35;}
+  .modal-box.err .modal-msg{color:#d11a2a;}
+  .modal-box.ok .modal-msg{color:var(--ink);}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header><span class="logo-dot"></span><b>Wizhoodz</b></header>
+    <h1>WizList Application.</h1>
+    <p class="lead">Five steps. One magic spot. <b style="color:var(--ink)">Post it on X to enter the WL.</b></p>
+
+    <div class="step" id="s1">
+      <div class="step-num">Step 01</div>
+      <h3>Follow @wizhoodz <span class="check hidden" id="c1">&#10003;</span></h3>
+      <a class="btn lime" id="followBtn" target="_blank" rel="noopener">Follow &rarr;</a>
+      <button class="btn ghost hidden" id="confirm1" style="margin-left:10px;">I did it &#10003;</button>
+    </div>
+
+    <div class="step locked" id="s2">
+      <div class="step-num">Step 02</div>
+      <h3>Like the post <span class="check hidden" id="c2">&#10003;</span></h3>
+      <a class="btn lime" id="likeBtn" target="_blank" rel="noopener">Like &#10084;&#65039;</a>
+      <button class="btn ghost hidden" id="confirm2" style="margin-left:10px;">I did it &#10003;</button>
+    </div>
+
+    <div class="step locked" id="s3">
+      <div class="step-num">Step 03</div>
+      <h3>Repost the post <span class="check hidden" id="c3">&#10003;</span></h3>
+      <a class="btn lime" id="repostBtn" target="_blank" rel="noopener">Repost &#128257;</a>
+      <button class="btn ghost hidden" id="confirm3" style="margin-left:10px;">I did it &#10003;</button>
+    </div>
+
+    <div class="step locked" id="s4">
+      <div class="step-num">Step 04</div>
+      <h3>Paste your wallet <span class="check hidden" id="c4">&#10003;</span></h3>
+      <input id="wallet" placeholder="0x... EVM address" disabled>
+    </div>
+
+    <div class="step locked" id="s5">
+      <div class="step-num">Step 05</div>
+      <h3>Your X handle <span class="check hidden" id="c5">&#10003;</span></h3>
+      <input id="handle" placeholder="@yourhandle" disabled>
+    </div>
+
+    <button class="btn dark block" id="summonBtn" disabled>Get ID</button>
+
+    <div id="resultZone" class="hidden">
+      <hr>
+      <div class="step-num">Your Wizhood ID</div>
+      <div class="cardwrap">
+        <div class="card" id="card">
+          <div class="card-top">
+            <img class="pfp" id="pfp" alt="">
+            <div>
+              <div class="card-name" id="wname"></div>
+              <div class="card-handle" id="whandle"></div>
+            </div>
+          </div>
+          <div class="card-bio" id="wbio"></div>
+          <div id="scores"></div>
+          <div class="card-id" id="idline"></div>
+        </div>
+      </div>
+
+      <p style="text-align:center;margin-top:14px;color:var(--grey);font-size:.9rem;">
+        Don't like it? <button id="rerollBtn" style="background:none;border:none;color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer;font-size:.9rem;">Try again</button>
+      </p>
+
+      <div style="display:flex;gap:12px;margin-top:22px;">
+        <button class="btn ghost block" id="saveBtn">&#8595; Save ID</button>
+        <button class="btn lime block" id="shareBtn">Post on X to Enter</button>
+      </div>
+      <p class="note" style="text-align:center;font-weight:600;color:var(--ink);">
+        &#9888;&#65039; You're only entered once you post on X. Save your ID first, then post!
+      </p>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal-box" id="modalBox">
+      <div class="modal-emoji" id="modalEmoji"></div>
+      <div class="modal-msg" id="modalMsg"></div>
+      <button class="btn dark block" id="modalCloseBtn">Close</button>
+    </div>
+  </div>
+
+<script>
+/* ============ CONFIG ============ */
+const SAVE_ENDPOINT="https://wl.wizhoodz.workers.dev/api/save";
+const WIZARD_IMG="https://lolamcburns.github.io/wizhoodz/wizdrive.jpeg";
+
+/* ⚠️ SET THESE TWO: your account + the tweet ID people must like/repost */
+const X_ACCOUNT="wizhoodz";
+const POST_ID="1234567890123456789"; /* <-- replace with your real tweet ID */
+
+/* build X intent links */
+document.getElementById('followBtn').href="https://x.com/intent/follow?screen_name="+X_ACCOUNT;
+document.getElementById('likeBtn').href="https://x.com/intent/like?tweet_id="+POST_ID;
+document.getElementById('repostBtn').href="https://x.com/intent/retweet?tweet_id="+POST_ID;
+
+/* ============ WORD BANKS ============ */
+const NOUN_GROUPS={
+  food:[
+    {title:"Onion",bio:"an onion",plural:"onions"},
+    {title:"Bean",bio:"a bean",plural:"beans"},
+    {title:"Cheese",bio:"cheese",plural:null},
+    {title:"Soup",bio:"soup",plural:null},
+    {title:"Gravy",bio:"gravy",plural:null},
+    {title:"Pickle",bio:"a pickle",plural:"pickles"},
+    {title:"Waffle",bio:"a waffle",plural:"waffles"},
+    {title:"Toast",bio:"toast",plural:null},
+    {title:"Meatball",bio:"a meatball",plural:"meatballs"},
+    {title:"Lemon",bio:"a lemon",plural:"lemons"},
+    {title:"Potato",bio:"a potato",plural:"potatoes"}
+  ],
+  object:[
+    {title:"Sock",bio:"a sock",plural:"socks"},
+    {title:"Neck",bio:"a neck",plural:"necks"},
+    {title:"Spoon",bio:"a spoon",plural:"spoons"},
+    {title:"Doorknob",bio:"a doorknob",plural:"doorknobs"},
+    {title:"Umbrella",bio:"an umbrella",plural:"umbrellas"},
+    {title:"Teapot",bio:"a teapot",plural:"teapots"},
+    {title:"Cone",bio:"a traffic cone",plural:"traffic cones"},
+    {title:"Stapler",bio:"a stapler",plural:"staplers"},
+    {title:"Gnome",bio:"a garden gnome",plural:"garden gnomes"}
+  ],
+  creature:[
+    {title:"Goblin",bio:"a goblin",plural:"goblins"},
+    {title:"Pigeon",bio:"a pigeon",plural:"pigeons"},
+    {title:"Raccoon",bio:"a raccoon",plural:"raccoons"},
+    {title:"Moth",bio:"a moth",plural:"moths"},
+    {title:"Ferret",bio:"a ferret",plural:"ferrets"},
+    {title:"Duck",bio:"a very large duck",plural:"very large ducks"},
+    {title:"Frog",bio:"a confused frog",plural:"confused frogs"},
+    {title:"Possum",bio:"a possum",plural:"possums"}
+  ]
+};
+const PLACE=["Ohio","the swamp","the pink mountains","the void","the magic castle","the spell casting office","aisle 7","the DMV","New Jersey","the misty hills","a Denny's parking lot","the forbidden pantry"];
+const FEELING=["spite","boredom","pure vibes","mild anxiety","stubbornness","caffeine","raw confusion"];
+const BIOS={
+  food:["Cries over their {bare} just to make it saltier.","Retired from evil to open a small {bare} shop in {place}.","Draws unlimited power from {x}. Refuses to explain how.","Their spellbook is just {n} recipes involving {bare}.","Runs {place}'s only tavern that serves nothing but {bare}.","Powered entirely by {feeling} and questionable {bare}.","Undefeated in {n} duels, all won by throwing {plural}."],
+  object:["Wields the legendary {bare} of {place}. It is mostly rusty.","Their staff is legally just {bare} with googly eyes.","Keeps {plural} in their hat 'for emergencies.'","Guards their {bare} like it is the crown jewels of {place}.","Founded a cult devoted to {plural}. It has {n} members.","Spent {n} years meditating on {x}. Learned nothing.","Fought their way out of {place} armed only with {plural}."],
+  creature:["Can summon {plural} but has no idea how to make them leave.","Their familiar is {bare} that only obeys on Tuesdays.","Turned a rival wizard into {x} {n} years ago. No regrets.","Their true form is {bare} wearing tiny glasses.","Was last seen chasing {plural} through {place}, screaming.","Communes with {plural} for wisdom. Gets terrible advice.","Banished from {place} for arguing with {plural}."]
+};
+const CLOSERS=["","", " Twice."," Allegedly."," We don't ask about it."," Nobody knows why."," Honestly, respect."," Peak wizard behavior."," Somehow, it worked."," It was a whole thing."];
+const FIRST=["Randolf","Golinda","Merlixx","Bumblewort","Zaphira","Grumbledor","Morgana","Thaddeus","Elvira","Snargle","Winnifred","Baldric","Cornelius","Blorbo","Throgg"];
+const MUNDANE=["Kevin","Susan","Gary","Brenda","Nigel","Doreen","Steve","Karen","Barry","Dave","Greg"];
+const DOER=["Poker","Whisperer","Botherer","Wrangler","Enjoyer","Menace","Guardian","Hoarder","Summoner","Napper","Respecter","Sniffer","Tamer","Muncher","Cracker","Hugger"];
+
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rnd=n=>Math.floor(Math.random()*n)+1;
+
+function summonWizard(){
+  const cat=pick(Object.keys(NOUN_GROUPS)), noun=pick(NOUN_GROUPS[cat]);
+  const bare=noun.bio.replace(/^(a |an |the )/,"");
+  const plural=noun.plural || bare;
+  const first=(Math.random()<0.35)?pick(MUNDANE):pick(FIRST);
+  const name=first+" The "+noun.title+" "+pick(DOER);
+  const slot={x:noun.bio,bare,plural,place:pick(PLACE),feeling:pick(FEELING),n:rnd(9)+1};
+  let bio=(pick(BIOS[cat])+pick(CLOSERS)).replace(/\{(\w+)\}/g,(m,k)=>slot[k]!==undefined?slot[k]:m);
+  bio=bio.replace(/\b(their|the|your|a|an)\s+(a|an)\s+/gi,'$1 ');
+  return{name,bio};
+}
+</script>
+<script>
+const ICONS={
+  HOT:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 2s5 4 5 9a5 5 0 11-10 0c0-2 1-3 1-3s0 2 2 2c2 0 1-4 2-8z" fill="#c9f31d" stroke="#0a0a0a" stroke-width="1.3"/></svg>',
+  CHILL:'<svg viewBox="0 0 24 24" stroke="#0a0a0a" stroke-width="1.4"><path d="M12 2v20M4 6l16 12M20 6L4 18" stroke="#0a0a0a"/><circle cx="12" cy="12" r="2.4" fill="#c9f31d"/></svg>',
+  HARTZ:'<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.4-7 10-7 10z" fill="#c9f31d" stroke="#0a0a0a" stroke-width="1.3"/></svg>',
+  BRAINZ:'<svg viewBox="0 0 24 24"><path d="M9 4a3 3 0 00-3 3 3 3 0 00-1 5 3 3 0 002 4 3 3 0 003 2V4zM15 4a3 3 0 013 3 3 3 0 011 5 3 3 0 01-2 4 3 3 0 01-3 2V4z" fill="#c9f31d" stroke="#0a0a0a" stroke-width="1.2"/></svg>',
+  VIBORIZZ:'<svg viewBox="0 0 24 24"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" fill="#c9f31d" stroke="#0a0a0a" stroke-width="1.2"/></svg>'
+};
+const ELEMENTS=["HOT","CHILL","HARTZ","BRAINZ","VIBORIZZ"];
+
+/* ============ UNLOCK FLOW ============ */
+const s2=document.getElementById('s2'),s3=document.getElementById('s3'),s4=document.getElementById('s4'),s5=document.getElementById('s5');
+const wallet=document.getElementById('wallet'),handle=document.getElementById('handle');
+const summonBtn=document.getElementById('summonBtn');
+let followed=false, liked=false, reposted=false;
+
+/* --- Step 1: Follow --- */
+document.getElementById('followBtn').addEventListener('click',()=>{
+  document.getElementById('confirm1').classList.remove('hidden');
+});
+document.getElementById('confirm1').addEventListener('click',()=>{
+  followed=true;
+  document.getElementById('c1').classList.remove('hidden');
+  document.getElementById('confirm1').classList.add('hidden');
+  s2.classList.remove('locked');
+  s2.scrollIntoView({behavior:'smooth',block:'center'});
+});
+
+/* --- Step 2: Like --- */
+document.getElementById('likeBtn').addEventListener('click',()=>{
+  document.getElementById('confirm2').classList.remove('hidden');
+});
+document.getElementById('confirm2').addEventListener('click',()=>{
+  liked=true;
+  document.getElementById('c2').classList.remove('hidden');
+  document.getElementById('confirm2').classList.add('hidden');
+  s3.classList.remove('locked');
+  s3.scrollIntoView({behavior:'smooth',block:'center'});
+});
+
+/* --- Step 3: Repost --- */
+document.getElementById('repostBtn').addEventListener('click',()=>{
+  document.getElementById('confirm3').classList.remove('hidden');
+});
+document.getElementById('confirm3').addEventListener('click',()=>{
+  reposted=true;
+  document.getElementById('c3').classList.remove('hidden');
+  document.getElementById('confirm3').classList.add('hidden');
+  s4.classList.remove('locked');
+  wallet.disabled=false;
+  s4.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>wallet.focus(),400);
+});
+
+wallet.addEventListener('input',gate);
+handle.addEventListener('input',gate);
+function walletValid(v){v=v.trim();return /^0x[a-fA-F0-9]{6,}$/.test(v)||/^[1-9A-HJ-NP-Za-km-z]{25,}$/.test(v);}
+function handleValid(v){return v.trim().replace(/^@/,'').length>=2;}
+function gate(){
+  const wOk=walletValid(wallet.value), hOk=handleValid(handle.value);
+  document.getElementById('c4').classList.toggle('hidden',!wOk);
+  if(wOk&&s5.classList.contains('locked')){s5.classList.remove('locked');handle.disabled=false;}
+  document.getElementById('c5').classList.toggle('hidden',!hOk);
+  summonBtn.disabled=!(followed&&liked&&reposted&&wOk&&hOk);
+}
+
+/* ============ SAVE ENTRY TO SERVER ============ */
+async function saveEntry(entry){
+  try{
+    const res=await fetch(SAVE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
+    return await res.json();
+  }catch(e){return {ok:false,error:"Could not reach server. Try again."};}
+}
+
+/* ============ SUMMON ============ */
+let current=null;
+let hasPosted=false;
+const shareBtn=document.getElementById('shareBtn');
+
+async function doSummon(){
+  const w=summonWizard();
+  const clean=handle.value.trim().replace(/^@/,'');
+  const vals=ELEMENTS.map(l=>({label:l,v:rnd(100)}));
+  const id="WIZ-"+Math.random().toString(16).slice(2,8).toUpperCase();
+
+  document.getElementById('wname').textContent=w.name;
+  document.getElementById('whandle').textContent="@"+clean;
+  document.getElementById('wbio').textContent='"'+w.bio+'"';
+  document.getElementById('idline').textContent=id+"  \u00b7  WIZHOODZ";
+
+  const box=document.getElementById('scores');
+  box.innerHTML=vals.map(v=>
+    '<div class="score-row"><span class="score-ico">'+ICONS[v.label]+'</span>'+
+    '<span class="score-label">'+v.label+'</span>'+
+    '<span class="bar"><i class="bar-fill"></i></span>'+
+    '<span class="score-val">'+v.v+'</span></div>').join('');
+  const fills=box.querySelectorAll('.bar-fill');
+  setTimeout(()=>fills.forEach((el,i)=>el.style.width=vals[i].v+'%'),60);
+
+  document.getElementById('resultZone').classList.remove('hidden');
+  current={...w,handle:clean,id,vals,wallet:wallet.value.trim(),pfp:WIZARD_IMG};
+
+  hasPosted=false;
+  shareBtn.disabled=false;
+  shareBtn.textContent="Post on X to Enter";
+
+  const pfp=document.getElementById('pfp');
+  pfp.src=WIZARD_IMG;
+}
+
+summonBtn.addEventListener('click',()=>{
+  doSummon();
+  document.getElementById('resultZone').scrollIntoView({behavior:'smooth',block:'start'});
+});
+document.getElementById('rerollBtn').addEventListener('click',doSummon);
+
+/* ============ DRAW CARD ============ */
+async function drawCard(cb){
+  const card=document.getElementById('card');
+  const frame=document.createElement('div');
+  frame.style.cssText="position:fixed;left:-9999px;top:0;background:#ffffff;padding:70px;box-sizing:content-box;width:"+card.offsetWidth+"px;";
+  const clone=card.cloneNode(true);
+  clone.style.margin="0";
+  const cpfp=clone.querySelector('.pfp');
+  if(cpfp && current && current.pfp) cpfp.src=current.pfp;
+  frame.appendChild(clone);
+  document.body.appendChild(frame);
+
+  await new Promise(r=>{
+    if(cpfp && cpfp.complete) return r();
+    if(cpfp){ cpfp.onload=r; cpfp.onerror=r; } else r();
+  });
+  await new Promise(r=>setTimeout(r,120));
+
+  const canvas=await html2canvas(frame,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false});
+  document.body.removeChild(frame);
+  canvas.toBlob(b=>cb(canvas,b),"image/jpeg");
+}
+
+/* ============ SAVE ID (download) ============ */
+document.getElementById('saveBtn').addEventListener('click',async ()=>{
+  await drawCard((cv,blob)=>{
+    if(blob){
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download="wizhood-id-"+current.handle+".jpeg";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),2000);
+    }
+  });
+});
+
+/* ============ MODAL ============ */
+const modalOverlay=document.getElementById('modalOverlay');
+const modalBox=document.getElementById('modalBox');
+const modalEmoji=document.getElementById('modalEmoji');
+const modalMsg=document.getElementById('modalMsg');
+
+function showModal(ok,msg,emoji){
+  modalBox.classList.remove('ok','err');
+  modalBox.classList.add(ok?'ok':'err');
+  modalEmoji.textContent=emoji;
+  modalMsg.textContent=msg;
+  modalOverlay.classList.remove('hidden');
+}
+
+function resetPage(){
+  followed=false; liked=false; reposted=false;
+  hasPosted=false;
+  current=null;
+  wallet.value=""; handle.value="";
+  wallet.disabled=true; handle.disabled=true;
+  s2.classList.add('locked'); s3.classList.add('locked');
+  s4.classList.add('locked'); s5.classList.add('locked');
+  document.getElementById('c1').classList.add('hidden');
+  document.getElementById('c2').classList.add('hidden');
+  document.getElementById('c3').classList.add('hidden');
+  document.getElementById('c4').classList.add('hidden');
+  document.getElementById('c5').classList.add('hidden');
+  document.getElementById('confirm1').classList.add('hidden');
+  document.getElementById('confirm2').classList.add('hidden');
+  document.getElementById('confirm3').classList.add('hidden');
+  summonBtn.disabled=true;
+  shareBtn.disabled=false;
+  shareBtn.textContent="Post on X to Enter";
+  document.getElementById('resultZone').classList.add('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('modalCloseBtn').addEventListener('click',()=>{
+  modalOverlay.classList.add('hidden');
+  resetPage();
+});
+
+/* ============ POST ON X ============ */
+shareBtn.addEventListener('click',async ()=>{
+  if(!current) return;
+  const tweetText="Got my ID @wizhoodz \ud83e\udeaa\ud83d\udd2e";
+  const tweetUrl="https://x.com/intent/tweet?text="+encodeURIComponent(tweetText);
+
+  window.open(tweetUrl,"_blank","noopener");
+
+  if(hasPosted){ return; }
+
+  shareBtn.disabled=true;
+  const oldText=shareBtn.textContent;
+  shareBtn.textContent="Saving...";
+
+  const result=await saveEntry({
+    wallet: current.wallet,
+    handle: current.handle,
+    wizardName: current.name,
+    id: current.id
+  });
+
+  if(result.ok){
+    hasPosted=true;
+    showModal(true,"You're on the WizList \ud83c\udf89","\ud83e\uddd9");
+  }else if(/already/i.test(JSON.stringify(result))){
+    hasPosted=true;
+    showModal(true,"You're already on the WizList \ud83c\udf89","\ud83e\uddd9");
+  }else{
+    shareBtn.disabled=false;
+    shareBtn.textContent=oldText;
+    showModal(false,(result.error||result.message||"Something went wrong."),"\u26D4");
+  }
+});
+</script>
+</body>
+</html>
