@@ -192,10 +192,12 @@ input:disabled{opacity:.5;}
   .nav-item .tag{display:none;}
   .nav-item.active::before{left:-8px;}
 
-  .nav-sep{margin:10px 4px;}
-  .nav-player{justify-content:center;padding:10px 0;}
+    .nav-sep{margin:10px 4px;}
+  /* stack: play/pause on top, equaliser directly below it */
+  .nav-player{flex-direction:column;justify-content:center;gap:6px;padding:10px 0;}
   .nav-player .p-meta{display:none;}
   .nav-pbar{display:none;}
+
 
   .content{padding:22px 14px 40px;}
   h1{font-size:2rem;}
