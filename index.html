@@ -43,15 +43,16 @@ body{font-family:var(--sans);background:#efefef;color:var(--ink);-webkit-font-sm
 /* ===== PLAYER AS NAV ITEM ===== */
 .nav-sep{border:none;border-top:1px dashed var(--line);margin:12px 6px;}
 .nav-player{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;cursor:pointer;
+  font-family:var(--sans);font-size:.95rem;font-weight:600;color:var(--grey);
   padding:11px 12px;border-radius:8px;margin-bottom:3px;transition:.15s;position:relative;}
-.nav-player:hover{background:var(--lime-soft);}
-.nav-player .p-ico{width:32px;height:32px;flex-shrink:0;border-radius:8px;border:1.5px solid var(--ink);
-  background:var(--lime);display:flex;align-items:center;justify-content:center;}
-.nav-player .p-ico svg{width:15px;height:15px;fill:var(--ink);stroke:none;}
+.nav-player:hover{background:var(--lime-soft);color:var(--ink);}
+/* the icon IS the button — no square around it */
+.nav-player .p-ico{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.nav-player .p-ico svg{width:18px;height:18px;fill:var(--lime);stroke:var(--ink);stroke-width:1;stroke-linejoin:round;}
 .nav-player .p-meta{flex:1;min-width:0;text-align:left;}
 .nav-player .p-track{font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .nav-player .p-sub{font-family:var(--mono);font-size:.55rem;letter-spacing:.15em;color:var(--faint);}
-.eq{display:flex;align-items:flex-end;gap:2px;height:18px;width:20px;flex-shrink:0;}
+.eq{display:flex;align-items:flex-end;gap:2px;height:16px;width:18px;flex-shrink:0;}
 .eq span{flex:1;background:var(--lime);border:.5px solid var(--ink);border-radius:1px;height:30%;}
 .eq.playing span{animation:bounce .8s ease-in-out infinite;}
 .eq.playing span:nth-child(2){animation-delay:.2s;}
